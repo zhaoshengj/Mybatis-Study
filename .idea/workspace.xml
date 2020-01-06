@@ -24,6 +24,9 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
+          <entry key="editorconfig" value="1" />
+          <entry key="gitattributes" value="1" />
+          <entry key="gitignore" value="1" />
           <entry key="java" value="8" />
           <entry key="md" value="1" />
           <entry key="xml" value="4" />
@@ -33,6 +36,7 @@
         <counts>
           <entry key="JAVA" value="8" />
           <entry key="Markdown" value="1" />
+          <entry key="PLAIN_TEXT" value="3" />
           <entry key="XML" value="4" />
         </counts>
       </usages-collector>
@@ -53,7 +57,13 @@
     </session>
   </component>
   <component name="FileEditorManager">
-    <leaf />
+    <leaf>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/mybatis-3-mybatis-3.5.3/.editorconfig">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -72,6 +82,7 @@
       <list>
         <option value="$PROJECT_DIR$/mybatis-3-mybatis-3.5.3/src/main/java/org/apache/ibatis/session/SqlSessionFactoryBuilder.java" />
         <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/mybatis-3-mybatis-3.5.3/.gitattributes" />
       </list>
     </option>
   </component>
@@ -106,6 +117,11 @@
             <path>
               <item name="Mybatis" type="b2602c69:ProjectViewProjectNode" />
               <item name="Mybatis" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Mybatis" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Mybatis" type="462c0819:PsiDirectoryNode" />
+              <item name="mybatis-3-mybatis-3.5.3" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -167,7 +183,7 @@
       <option name="presentableId" value="Default" />
       <updated>1578205784973</updated>
       <workItem from="1578205786511" duration="180000" />
-      <workItem from="1578274358676" duration="2112000" />
+      <workItem from="1578274358676" duration="2616000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <created>1578275726621</created>
@@ -180,7 +196,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="2292000" />
+    <option name="totallyTimeSpent" value="2796000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-59" y="-877" width="1440" height="822" extended-state="6" />
@@ -307,6 +323,15 @@
         </state>
       </provider>
       <provider editor-type-id="MavenHelperPluginDependencyAnalyzer" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mybatis-3-mybatis-3.5.3/.gitignore">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mybatis-3-mybatis-3.5.3/.gitattributes">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mybatis-3-mybatis-3.5.3/.editorconfig">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
   </component>
   <component name="masterDetails">
