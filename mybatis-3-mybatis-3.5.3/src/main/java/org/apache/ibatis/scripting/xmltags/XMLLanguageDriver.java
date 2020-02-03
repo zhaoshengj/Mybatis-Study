@@ -33,17 +33,26 @@ import org.apache.ibatis.session.Configuration;
  */
 public class XMLLanguageDriver implements LanguageDriver {
 
+  // 创建参数处理器，返回默认的实现
   @Override
   public ParameterHandler createParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
     return new DefaultParameterHandler(mappedStatement, parameterObject, boundSql);
   }
 
+  //默认情况下，mybatis使用org.apache.ibatis.scripting.xmltags.XMLLanguageDriver。通过调用createSqlSource方法来创建SqlSource，
+  //他有两个重载版本，第二个主要是传递文本的格式，所以我们重点分析第一个版本。
+  // XMLScriptBuilder构造器中设置相关字段外，还硬编码了每个支持的动态元素对应的处理器。
+  // 如果我们要支持额外的动态元素比如else/elsif，只要在map中添加对应的key/value对即可。
+
+
+  // 根据XML定义创建SqlSource
   @Override
   public SqlSource createSqlSource(Configuration configuration, XNode script, Class<?> parameterType) {
     XMLScriptBuilder builder = new XMLScriptBuilder(configuration, script, parameterType);
     return builder.parseScriptNode();
   }
 
+  // 解析注解中的SQL语句
   @Override
   public SqlSource createSqlSource(Configuration configuration, String script, Class<?> parameterType) {
     // issue #3

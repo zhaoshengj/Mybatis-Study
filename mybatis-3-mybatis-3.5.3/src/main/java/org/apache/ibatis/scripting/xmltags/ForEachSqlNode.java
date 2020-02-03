@@ -51,6 +51,7 @@ public class ForEachSqlNode implements SqlNode {
   @Override
   public boolean apply(DynamicContext context) {
     Map<String, Object> bindings = context.getBindings();
+    // 将Map/Array/List统一包装为迭代器接口
     final Iterable<?> iterable = evaluator.evaluateIterable(collectionExpression, bindings);
     if (!iterable.iterator().hasNext()) {
       return true;
@@ -58,6 +59,7 @@ public class ForEachSqlNode implements SqlNode {
     boolean first = true;
     applyOpen(context);
     int i = 0;
+    // 遍历集合
     for (Object o : iterable) {
       DynamicContext oldContext = context;
       if (first || separator == null) {
@@ -67,15 +69,16 @@ public class ForEachSqlNode implements SqlNode {
       }
       int uniqueNumber = context.getUniqueNumber();
       // Issue #709
-      if (o instanceof Map.Entry) {
+      if (o instanceof Map.Entry) {//Map条目处理
         @SuppressWarnings("unchecked")
         Map.Entry<Object, Object> mapEntry = (Map.Entry<Object, Object>) o;
         applyIndex(context, mapEntry.getKey(), uniqueNumber);
         applyItem(context, mapEntry.getValue(), uniqueNumber);
-      } else {
+      } else {// List条目处理
         applyIndex(context, i, uniqueNumber);
         applyItem(context, o, uniqueNumber);
       }
+      // 子节点SqlNode处理，很重要的一个逻辑就是将#{item.XXX}转换为#{__frch_item_N.XXX}，这样在JDBC设置参数的时候就能够找到对应的参数值了
       contents.apply(new FilteredDynamicContext(configuration, context, index, item, uniqueNumber));
       if (first) {
         first = !((PrefixedContext) context).isPrefixApplied();
@@ -151,6 +154,7 @@ public class ForEachSqlNode implements SqlNode {
     @Override
     public void appendSql(String sql) {
       GenericTokenParser parser = new GenericTokenParser("#{", "}", content -> {
+        // 将#{item.XXX}转换为#{__frch_item_N.XXX}
         String newContent = content.replaceFirst("^\\s*" + item + "(?![^.,:\\s])", itemizeItem(item, index));
         if (itemIndex != null && newContent.equals(content)) {
           newContent = content.replaceFirst("^\\s*" + itemIndex + "(?![^.,:\\s])", itemizeItem(itemIndex, index));

@@ -34,6 +34,7 @@ import org.apache.ibatis.session.SqlSession;
 public class MapperRegistry {
 
   private final Configuration config;
+  //knownMappers是MapperRegistry的主要字段，维护了Mapper接口和代理类的映射关系,key是mapper接口类，value是MapperProxyFactory
   private final Map<Class<?>, MapperProxyFactory<?>> knownMappers = new HashMap<>();
 
   public MapperRegistry(Configuration config) {
@@ -58,20 +59,25 @@ public class MapperRegistry {
   }
 
   public <T> void addMapper(Class<T> type) {
+    // 对于mybatis mapper接口文件，必须是interface，不能是class
     if (type.isInterface()) {
+      // 判重，确保只会加载一次不会被覆盖
       if (hasMapper(type)) {
         throw new BindingException("Type " + type + " is already known to the MapperRegistry.");
       }
       boolean loadCompleted = false;
       try {
+        // 为mapper接口创建一个MapperProxyFactory代理
         knownMappers.put(type, new MapperProxyFactory<>(type));
         // It's important that the type is added before the parser is run
         // otherwise the binding may automatically be attempted by the
         // mapper parser. If the type is already known, it won't try.
+        //重要的是，必须在运行解析器之前添加类型，否则映射器解析器可能会自动尝试绑定。如果类型是已知的，则不会尝试
         MapperAnnotationBuilder parser = new MapperAnnotationBuilder(config, type);
         parser.parse();
         loadCompleted = true;
       } finally {
+        //剔除解析出现异常的接口
         if (!loadCompleted) {
           knownMappers.remove(type);
         }
@@ -90,10 +96,15 @@ public class MapperRegistry {
    * @since 3.2.2
    */
   public void addMappers(String packageName, Class<?> superType) {
+    // mybatis框架提供的搜索classpath下指定package以及子package中符合条件(注解或者继承于某个类/接口)的类，
+    // 默认使用Thread.currentThread().getContextClassLoader()返回的加载器,和spring的工具类殊途同归。
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
+    // 无条件的加载所有的类,因为调用方传递了Object.class作为父类,这也给以后的指定mapper接口预留了余地
     resolverUtil.find(new ResolverUtil.IsA(superType), packageName);
+    // 所有匹配的calss都被存储在ResolverUtil.matches字段中
     Set<Class<? extends Class<?>>> mapperSet = resolverUtil.getClasses();
     for (Class<?> mapperClass : mapperSet) {
+      //调用addMapper方法进行具体的mapper类/接口解析
       addMapper(mapperClass);
     }
   }

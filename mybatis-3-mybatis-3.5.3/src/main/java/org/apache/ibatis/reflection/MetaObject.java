@@ -47,6 +47,7 @@ public class MetaObject {
     if (object instanceof ObjectWrapper) {
       this.objectWrapper = (ObjectWrapper) object;
     } else if (objectWrapperFactory.hasWrapperFor(object)) {
+      // 如果有自定义的ObjectWrapperFactory,就不会总是返回false了,这样对于特定类就启用了的我们自定义的ObjectWrapper
       this.objectWrapper = objectWrapperFactory.getWrapperFor(this, object);
     } else if (object instanceof Map) {
       this.objectWrapper = new MapWrapper(this, (Map) object);

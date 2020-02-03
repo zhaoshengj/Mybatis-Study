@@ -125,9 +125,13 @@ public class MapperAnnotationBuilder {
 
   public void parse() {
     String resource = type.toString();
+    //首先根据mapper接口的字符串表示判断是否已经加载,避免重复加载,正常情况下应该都没有加载
     if (!configuration.isResourceLoaded(resource)) {
+
       loadXmlResource();
+
       configuration.addLoadedResource(resource);
+      // 每个mapper文件自成一个namespace，通常自动匹配就是这么来的，约定俗成代替人工设置最简化常见的开发
       assistant.setCurrentNamespace(type.getName());
       parseCache();
       parseCacheRef();
@@ -227,15 +231,21 @@ public class MapperAnnotationBuilder {
   }
 
   private String parseResultMap(Method method) {
+    // 获取方法的返回类型
     Class<?> returnType = getReturnType(method);
+    // 获取构造器
     ConstructorArgs args = method.getAnnotation(ConstructorArgs.class);
+    // 获取@Results注解,也就是注解形式的结果映射
     Results results = method.getAnnotation(Results.class);
+    // 获取鉴别器
     TypeDiscriminator typeDiscriminator = method.getAnnotation(TypeDiscriminator.class);
+    // 产生resultMapId
     String resultMapId = generateResultMapName(method);
     applyResultMap(resultMapId, returnType, argsIf(args), resultsIf(results), typeDiscriminator);
     return resultMapId;
   }
 
+  // 如果有resultMap设置了Id，就直接返回类名.resultMapId. 否则返回类名.方法名.以-分隔拼接的方法参数
   private String generateResultMapName(Method method) {
     Results results = method.getAnnotation(Results.class);
     if (results != null && !results.id().isEmpty()) {
@@ -264,7 +274,11 @@ public class MapperAnnotationBuilder {
 
   private void createDiscriminatorResultMaps(String resultMapId, Class<?> resultType, TypeDiscriminator discriminator) {
     if (discriminator != null) {
+      // 对于鉴别器来说，和XML配置的差别在于xml中可以外部公用的resultMap,在注解中，则只提供了内嵌式的resultMap定义
       for (Case c : discriminator.cases()) {
+        // 从内部实现的角度,因为内嵌式的resultMap定义也会创建resultMap,所以XML的实现也一样，
+        // 对于内嵌式鉴别器每个分支resultMap,其命名为映射方法的resultMapId-Case.value()。
+        // 这样在运行时，只要知道resultMap中包含了鉴别器之后，获取具体的鉴别器映射就很简单了，map.get()一下就得到了。
         String caseResultMapId = resultMapId + "-" + c.value();
         List<ResultMapping> resultMappings = new ArrayList<>();
         // issue #136
@@ -297,16 +311,24 @@ public class MapperAnnotationBuilder {
   }
 
   void parseStatement(Method method) {
+    // 获取参数类型,如果有多个参数,这种情况下就返回org.apache.ibatis.binding.MapperMethod.ParamMap.class，
+    // ParamMap是一个继承于HashMap的类， 否则返回实际类型
     Class<?> parameterTypeClass = getParameterType(method);
+    // 获取语言驱动器
     LanguageDriver languageDriver = getLanguageDriver(method);
+    // 获取方法的SqlSource对象,只有指定了@Select/@Insert/@Update/@Delete或者对应的Provider的方法才会被当作mapper,
+    // 否则只是和mapper文件中对应语句的一个运行时占位符
     SqlSource sqlSource = getSqlSourceFromAnnotations(method, parameterTypeClass, languageDriver);
     if (sqlSource != null) {
+      // 获取方法的属性设置，对应<select>中的各种属性
       Options options = method.getAnnotation(Options.class);
       final String mappedStatementId = type.getName() + "." + method.getName();
       Integer fetchSize = null;
       Integer timeout = null;
       StatementType statementType = StatementType.PREPARED;
       ResultSetType resultSetType = configuration.getDefaultResultSetType();
+
+      // 获取语句的CRUD类型
       SqlCommandType sqlCommandType = getSqlCommandType(method);
       boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
       boolean flushCache = !isSelect;
@@ -315,6 +337,7 @@ public class MapperAnnotationBuilder {
       KeyGenerator keyGenerator;
       String keyProperty = null;
       String keyColumn = null;
+      // 只有INSERT/UPDATE才解析SelectKey选项,总体来说，它的实现逻辑和XML基本一致，这里不展开详述
       if (SqlCommandType.INSERT.equals(sqlCommandType) || SqlCommandType.UPDATE.equals(sqlCommandType)) {
         // first check for SelectKey annotation - that overrides everything else
         SelectKey selectKey = method.getAnnotation(SelectKey.class);
@@ -348,10 +371,15 @@ public class MapperAnnotationBuilder {
       }
 
       String resultMapId = null;
+      // 解析@ResultMap注解,如果有@ResultMap注解,就是用它，否则才解析@Results
+      // @ResultMap注解用于给@Select和@SelectProvider注解提供在xml配置的<resultMap>,
+      // 如果一个方法上同时出现@Results或者@ConstructorArgs等和结果映射有关的注解,
+      // 那么@ResultMap会覆盖后面两者的注解
       ResultMap resultMapAnnotation = method.getAnnotation(ResultMap.class);
       if (resultMapAnnotation != null) {
         resultMapId = String.join(",", resultMapAnnotation.value());
       } else if (isSelect) {
+        //如果是查询，且没有明确设置ResultMap，则根据返回类型自动解析生成ResultMap
         resultMapId = parseResultMap(method);
       }
 

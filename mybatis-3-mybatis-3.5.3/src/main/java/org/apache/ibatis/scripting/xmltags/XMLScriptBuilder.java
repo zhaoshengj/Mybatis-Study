@@ -43,6 +43,7 @@ public class XMLScriptBuilder extends BaseBuilder {
     this(configuration, context, null);
   }
 
+
   public XMLScriptBuilder(Configuration configuration, XNode context, Class<?> parameterType) {
     super(configuration);
     this.context = context;
@@ -50,7 +51,9 @@ public class XMLScriptBuilder extends BaseBuilder {
     initNodeHandlerMap();
   }
 
-
+  //这里采用了内部类的设计，内部类只有在有外部类实例的情况下才会存在。
+  // 在这里因为内部类不会单独被使用，所以应该设计为内部类而不是内部静态类。
+  // 每个动态元素处理类都实现了NodeHandler接口且有对应的SqlNode比如IfSqlNode。
   private void initNodeHandlerMap() {
     nodeHandlerMap.put("trim", new TrimHandler());
     nodeHandlerMap.put("where", new WhereHandler());
@@ -64,6 +67,7 @@ public class XMLScriptBuilder extends BaseBuilder {
   }
 
   public SqlSource parseScriptNode() {
+    // 解析动态标签
     MixedSqlNode rootSqlNode = parseDynamicTags(context);
     SqlSource sqlSource;
     if (isDynamic) {
@@ -74,6 +78,7 @@ public class XMLScriptBuilder extends BaseBuilder {
     return sqlSource;
   }
 
+  // 动态标签解析实现
   protected MixedSqlNode parseDynamicTags(XNode node) {
     List<SqlNode> contents = new ArrayList<>();
     NodeList children = node.getNode().getChildNodes();
@@ -82,22 +87,32 @@ public class XMLScriptBuilder extends BaseBuilder {
       if (child.getNode().getNodeType() == Node.CDATA_SECTION_NODE || child.getNode().getNodeType() == Node.TEXT_NODE) {
         String data = child.getStringBody("");
         TextSqlNode textSqlNode = new TextSqlNode(data);
+        // 判断文本节点中是否包含了${}，如果包含则为动态文本节点，否则为静态文本节点，静态文本节点在运行时不需要二次处理
         if (textSqlNode.isDynamic()) {
           contents.add(textSqlNode);
           isDynamic = true;
         } else {
           contents.add(new StaticTextSqlNode(data));
         }
-      } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628
+      } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628 标签节点
         String nodeName = child.getNode().getNodeName();
+        // 首先根据节点名称获取到对应的节点处理器
         NodeHandler handler = nodeHandlerMap.get(nodeName);
         if (handler == null) {
           throw new BuilderException("Unknown element <" + nodeName + "> in SQL statement.");
         }
+        // 使用对应的节点处理器处理本节点
         handler.handleNode(child, contents);
         isDynamic = true;
       }
     }
+    // 在解析mapper语句的时候，很重要的一个步骤是解析动态标签(动态指的是SQL文本里面包含了${}动态变量或者包含等元素的sql节点,
+    // 它将合成为SQL语句的一部分发送给数据库)，然后根据是否动态sql决定实例化的SqlSource为DynamicSqlSource或RawSqlSource。
+    // 可以说,mybatis是通过动态标签的实现来解决传统JDBC编程中sql语句拼接这个步骤的
+    // (就像现代web前端开发使用模板或vdom自动绑定代替jquery字符串拼接一样)，mybatis动态标签被设计为可以相互嵌套，
+    // 所以对于动态标签的解析需要递归直到解析至文本节点。一个映射语句下可以包含多个根动态标签，
+    // 因此最后返回的是一个MixedSqlNode，其中有一个List类型的属性，包含树状层次嵌套的多种SqlNode实现类型的列表，
+    // 也就是单向链表的其中一种衍生形式。
     return new MixedSqlNode(contents);
   }
 
@@ -112,7 +127,9 @@ public class XMLScriptBuilder extends BaseBuilder {
 
     @Override
     public void handleNode(XNode nodeToHandle, List<SqlNode> targetContents) {
+      // 变量名称
       final String name = nodeToHandle.getStringAttribute("name");
+      // OGNL表达式
       final String expression = nodeToHandle.getStringAttribute("value");
       final VarDeclSqlNode node = new VarDeclSqlNode(name, expression);
       targetContents.add(node);
@@ -127,9 +144,13 @@ public class XMLScriptBuilder extends BaseBuilder {
     @Override
     public void handleNode(XNode nodeToHandle, List<SqlNode> targetContents) {
       MixedSqlNode mixedSqlNode = parseDynamicTags(nodeToHandle);
+      // 包含的子节点解析后SQL文本不为空时要添加的前缀内容
       String prefix = nodeToHandle.getStringAttribute("prefix");
+      // 要覆盖的子节点解析后SQL文本前缀内容
       String prefixOverrides = nodeToHandle.getStringAttribute("prefixOverrides");
+      // 包含的子节点解析后SQL文本不为空时要添加的后缀内容
       String suffix = nodeToHandle.getStringAttribute("suffix");
+      // 要覆盖的子节点解析后SQL文本后缀内容
       String suffixOverrides = nodeToHandle.getStringAttribute("suffixOverrides");
       TrimSqlNode trim = new TrimSqlNode(configuration, mixedSqlNode, prefix, prefixOverrides, suffix, suffixOverrides);
       targetContents.add(trim);
@@ -189,6 +210,7 @@ public class XMLScriptBuilder extends BaseBuilder {
     @Override
     public void handleNode(XNode nodeToHandle, List<SqlNode> targetContents) {
       MixedSqlNode mixedSqlNode = parseDynamicTags(nodeToHandle);
+      // 获取if属性的值，将值设置为IfSqlNode的属性，便于运行时解析
       String test = nodeToHandle.getStringAttribute("test");
       IfSqlNode ifSqlNode = new IfSqlNode(mixedSqlNode, test);
       targetContents.add(ifSqlNode);
@@ -216,6 +238,7 @@ public class XMLScriptBuilder extends BaseBuilder {
     public void handleNode(XNode nodeToHandle, List<SqlNode> targetContents) {
       List<SqlNode> whenSqlNodes = new ArrayList<>();
       List<SqlNode> otherwiseSqlNodes = new ArrayList<>();
+      // 拆分出when 和 otherwise 节点
       handleWhenOtherwiseNodes(nodeToHandle, whenSqlNodes, otherwiseSqlNodes);
       SqlNode defaultSqlNode = getDefaultSqlNode(otherwiseSqlNodes);
       ChooseSqlNode chooseSqlNode = new ChooseSqlNode(whenSqlNodes, defaultSqlNode);

@@ -91,6 +91,7 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   public void parse() {
     if (!configuration.isResourceLoaded(resource)) {
+      //解析mapper
       configurationElement(parser.evalNode("/mapper"));
       configuration.addLoadedResource(resource);
       bindMapperForNamespace();
@@ -112,11 +113,19 @@ public class XMLMapperBuilder extends BaseBuilder {
         throw new BuilderException("Mapper's namespace cannot be empty");
       }
       builderAssistant.setCurrentNamespace(namespace);
+
+      //共用其他缓存的设置
       cacheRefElement(context.evalNode("cache-ref"));
+      //解析缓存cache
       cacheElement(context.evalNode("cache"));
+      //解析参数映射parameterMap
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
+      //解析结果集映射resultMap
       resultMapElements(context.evalNodes("/mapper/resultMap"));
+
+      //解析sql片段
       sqlElement(context.evalNodes("/mapper/sql"));
+      //crud的解析  透过调用调用链，我们可以得知SQL语句的解析主要在XMLStatementBuilder中实现。
       buildStatementFromContext(context.evalNodes("select|insert|update|delete"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing Mapper XML. The XML location is '" + resource + "'. Cause: " + e, e);
@@ -199,6 +208,10 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private void cacheElement(XNode context) {
+    //默认情况下，mybatis使用的是永久缓存PerpetualCache，读取或设置各个属性默认值之后，
+    // 调用builderAssistant.useNewCache构建缓存，其中的CacheBuilder使用了build模式
+    // （在effective里面，建议有4个以上可选属性时，应该为对象提供一个builder便于使用），
+    // 只要实现org.apache.ibatis.cache.Cache接口，就是合法的mybatis缓存。
     if (context != null) {
       String type = context.getStringAttribute("type", "PERPETUAL");
       Class<? extends Cache> typeClass = typeAliasRegistry.resolveAlias(type);
@@ -269,8 +282,10 @@ public class XMLMapperBuilder extends BaseBuilder {
     List<XNode> resultChildren = resultMapNode.getChildren();
     for (XNode resultChild : resultChildren) {
       if ("constructor".equals(resultChild.getName())) {
+        //构造器
         processConstructorElement(resultChild, typeClass, resultMappings);
       } else if ("discriminator".equals(resultChild.getName())) {
+        //鉴别器discriminator的解析
         discriminator = processDiscriminatorElement(resultChild, typeClass, resultMappings);
       } else {
         List<ResultFlag> flags = new ArrayList<>();
@@ -306,6 +321,8 @@ public class XMLMapperBuilder extends BaseBuilder {
     return null;
   }
 
+  //遍历构造器元素
+  //构造器的解析比较简单，除了遍历构造参数外，还可以构造器参数的ID也识别出来。最后调用buildResultMappingFromContext建立具体的resultMap
   private void processConstructorElement(XNode resultChild, Class<?> resultType, List<ResultMapping> resultMappings) throws Exception {
     List<XNode> argChildren = resultChild.getChildren();
     for (XNode argChild : argChildren) {
@@ -317,7 +334,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       resultMappings.add(buildResultMappingFromContext(argChild, resultType, flags));
     }
   }
-
+  //鉴别器discriminator的解析
   private Discriminator processDiscriminatorElement(XNode context, Class<?> resultType, List<ResultMapping> resultMappings) throws Exception {
     String column = context.getStringAttribute("column");
     String javaType = context.getStringAttribute("javaType");
@@ -344,6 +361,7 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private void sqlElement(List<XNode> list, String requiredDatabaseId) {
     for (XNode context : list) {
+      //mybatis可以根据不同的数据库执行不同的sql，这就是通过sql元素上的databaseId属性来区别的
       String databaseId = context.getStringAttribute("databaseId");
       String id = context.getStringAttribute("id");
       id = builderAssistant.applyCurrentNamespace(id, false);
@@ -379,7 +397,15 @@ public class XMLMapperBuilder extends BaseBuilder {
     String javaType = context.getStringAttribute("javaType");
     String jdbcType = context.getStringAttribute("jdbcType");
     String nestedSelect = context.getStringAttribute("select");
+    // resultMap中可以包含association或collection复合类型,这些复合类型可以使用外部定义的公用resultMap或者内嵌resultMap,
+    // 所以这里的处理逻辑是如果有resultMap就获取resultMap,如果没有,那就动态生成一个。
+    // 如果自动生成的话，他的resultMap id通过调用XNode.getValueBasedIdentifier()来获得
     String nestedResultMap = context.getStringAttribute("resultMap",
+        //用于解析包含的association或collection复合类型,这些复合类型可以使用外部定义的公用resultMap或者内嵌resultMap,
+      // 所以这里的处理逻辑是如果是外部resultMap就获取对应resultMap的名称,如果没有,那就动态生成一个。
+      // 如果自动生成的话，其resultMap id通过调用XNode.getValueBasedIdentifier()来获得。
+      // 由于colletion和association、discriminator里面还可以包含复合类型，
+      // 所以将进行递归解析直到所有的子元素都为基本列位置，它在使用层面的目的在于将关系模型映射为对象树模型。
         processNestedResultMappings(context, Collections.emptyList(), resultType));
     String notNullColumn = context.getStringAttribute("notNullColumn");
     String columnPrefix = context.getStringAttribute("columnPrefix");
@@ -394,6 +420,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   private String processNestedResultMappings(XNode context, List<ResultMapping> resultMappings, Class<?> enclosingType) throws Exception {
+    //注意“ofType”属性，这个属性用来区分JavaBean(或字段)属性类型和集合中存储的对象类型
     if ("association".equals(context.getName())
         || "collection".equals(context.getName())
         || "case".equals(context.getName())) {

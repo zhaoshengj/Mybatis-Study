@@ -91,31 +91,51 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   public Configuration parse() {
+    //判断文件是否解析过  初始false
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
     parsed = true;
+    //mybatis配置文件解析的主流程
     parseConfiguration(parser.evalNode("/configuration"));
     return configuration;
   }
 
   private void parseConfiguration(XNode root) {
     try {
+
+      //，XNode里面主要把关键的节点属性和占位符变量结构化出来，
+      // 然后调用parseConfiguration根据mybatis的主要配置进行解析
+
+      //所有的root.evalNode底层都是调用XML DOM的evaluate()方法，根据给定的节点表达式来计算指定的 XPath 表达式，
+      // 并且返回一个XPathResult对象，返回类型在Node.evalNode()方法中均被指定为NODE。
+
       //issue #117 read properties first
+
+      //加载properties
       propertiesElement(root.evalNode("properties"));
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       loadCustomVfs(settings);
       loadCustomLogImpl(settings);
       typeAliasesElement(root.evalNode("typeAliases"));
       pluginElement(root.evalNode("plugins"));
+
+      //加载对象工厂objectFactoryElement
       objectFactoryElement(root.evalNode("objectFactory"));
+      //创建对象包装器工厂objectWrapperFactoryElement
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
+      //加载反射工厂reflectorFactoryElement
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
+
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
+      //加载环境配置environmentsElement
       environmentsElement(root.evalNode("environments"));
+      //数据库厂商标识加载databaseIdProviderElement
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+      //加载类型处理器typeHandlerElement
       typeHandlerElement(root.evalNode("typeHandlers"));
+      //mapper文件是mybatis框架的核心之处，所有的用户sql语句都编写在mapper文件中
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
@@ -128,6 +148,11 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
     Properties props = context.getChildrenAsProperties();
     // Check that all settings are known to the configuration class
+    // 检查所有从settings加载的设置,确保它们都在Configuration定义的范围内
+
+   // MetaClass是一个保存对象定义比如getter/setter/构造器等的元数据类,
+    // localReflectorFactory则是mybatis提供的默认反射工厂实现，
+    // 这个ReflectorFactory主要采用了工厂类，其内部使用的Reflector采用了facade设计模式，简化反射的使用
     MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
     for (Object key : props.keySet()) {
       if (!metaConfig.hasSetter(String.valueOf(key))) {
@@ -157,6 +182,8 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void typeAliasesElement(XNode parent) {
+    //mybatis主要提供两种类型的别名设置，具体类的别名以及包的别名设置。
+    // 类型别名是为 Java 类型设置一个短的名字，存在的意义仅在于用来减少类完全限定名的冗余。
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
         if ("package".equals(child.getName())) {
@@ -185,6 +212,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       for (XNode child : parent.getChildren()) {
         String interceptor = child.getStringAttribute("interceptor");
         Properties properties = child.getChildrenAsProperties();
+        //将interceptor指定的名称解析为Interceptor类型
         Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor().newInstance();
         interceptorInstance.setProperties(properties);
         configuration.addInterceptor(interceptorInstance);
@@ -220,9 +248,12 @@ public class XMLConfigBuilder extends BaseBuilder {
 
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
+
+      // 加载property节点为property
       Properties defaults = context.getChildrenAsProperties();
       String resource = context.getStringAttribute("resource");
       String url = context.getStringAttribute("url");
+      // 必须至少包含resource或者url属性之一
       if (resource != null && url != null) {
         throw new BuilderException("The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
       }
@@ -270,16 +301,23 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private void environmentsElement(XNode context) throws Exception {
+    //mybatis内置提供JDBC和MANAGED两种事务管理方式，前者主要用于简单JDBC模式，
+    // 后者主要用于容器管理事务，一般使用JDBC事务管理方式。
+    // mybatis内置提供JNDI、POOLED、UNPOOLED三种数据源工厂，一般情况下使用POOLED数据源。
     if (context != null) {
       if (environment == null) {
         environment = context.getStringAttribute("default");
       }
       for (XNode child : context.getChildren()) {
         String id = child.getStringAttribute("id");
+        //查找匹配的environment
         if (isSpecifiedEnvironment(id)) {
+          // 事务配置并创建事务工厂
           TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
+          // 数据源配置加载并实例化数据源, 数据源是必备的
           DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
           DataSource dataSource = dsFactory.getDataSource();
+          // 创建Environment.Builder
           Environment.Builder environmentBuilder = new Environment.Builder(id)
               .transactionFactory(txFactory)
               .dataSource(dataSource);
@@ -360,10 +398,17 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void mapperElement(XNode parent) throws Exception {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        // 如果要同时使用package自动扫描和通过mapper明确指定要加载的mapper，
+        // 一定要确保package自动扫描的范围不包含明确指定的mapper，否则在通过package扫描的interface的时候，
+        // 尝试加载对应xml文件的loadXmlResource()的逻辑中出现判重出错，
+        // 报org.apache.ibatis.binding.BindingException异常，
+        // 即使xml文件中包含的内容和mapper接口中包含的语句不重复也会出错，
+        // 包括加载mapper接口时自动加载的xml mapper也一样会出错。
         if ("package".equals(child.getName())) {
           String mapperPackage = child.getStringAttribute("name");
           configuration.addMappers(mapperPackage);
         } else {
+          // package > resource > url > class
           String resource = child.getStringAttribute("resource");
           String url = child.getStringAttribute("url");
           String mapperClass = child.getStringAttribute("class");

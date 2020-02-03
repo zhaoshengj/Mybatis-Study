@@ -102,51 +102,97 @@ public class Configuration {
 
   protected Environment environment;
 
+  // 允许在嵌套语句中使用分页（RowBounds）。如果允许使用则设置为false。默认为false
   protected boolean safeRowBoundsEnabled;
+  // 允许在嵌套语句中使用分页（ResultHandler）。如果允许使用则设置为false。
   protected boolean safeResultHandlerEnabled = true;
+  // 是否开启自动驼峰命名规则（camel case）映射，即从经典数据库列名 A_COLUMN 到经典 Java 属性名 aColumn 的类似映射。默认false
   protected boolean mapUnderscoreToCamelCase;
+  // 当开启时，任何方法的调用都会加载该对象的所有属性。否则，每个属性会按需加载。默认值false (true in ≤3.4.1)
   protected boolean aggressiveLazyLoading;
+  // 是否允许单一语句返回多结果集（需要兼容驱动）。
   protected boolean multipleResultSetsEnabled = true;
+  //// 允许 JDBC 支持自动生成主键，需要驱动兼容。
+  // 这就是insert时获取mysql自增主键/oracle sequence的开关。注：一般来说,这是希望的结果,应该默认值为true比较合适。
   protected boolean useGeneratedKeys;
+  // 使用列标签代替列名,一般来说,这是希望的结果
   protected boolean useColumnLabel = true;
+  // 是否启用缓存
   protected boolean cacheEnabled = true;
+  // 指定当结果集中值为 null 的时候是否调用映射对象的 setter（map 对象时为 put）方法，
+  // 这对于有 Map.keySet() 依赖或 null 值初始化的时候是有用的。
   protected boolean callSettersOnNulls;
+  // 允许使用方法签名中的名称作为语句参数名称。 为了使用该特性，你的工程必须采用Java 8编译，
+  // 并且加上-parameters选项。（从3.4.1开始）
   protected boolean useActualParamName = true;
+  //当返回行的所有列都是空时，MyBatis默认返回null。
+  // 当开启这个设置时，MyBatis会返回一个空实例。
+  // 请注意，它也适用于嵌套的结果集 (i.e. collectioin and association)。（从3.4.2开始）
+  // 注：这里应该拆分为两个参数比较合适, 一个用于结果集，一个用于单记录。
+  // 通常来说，我们会希望结果集不是null，单记录仍然是null
   protected boolean returnInstanceForEmptyRow;
 
+  // 指定 MyBatis 增加到日志名称的前缀。
   protected String logPrefix;
+  // 指定 MyBatis 所用日志的具体实现，未指定时将自动查找。一般建议指定为slf4j或log4j
   protected Class<? extends Log> logImpl;
+  // 指定VFS的实现, VFS是mybatis提供的用于访问AS内资源的一个简便接口
   protected Class<? extends VFS> vfsImpl;
+  // MyBatis 利用本地缓存机制（Local Cache）防止循环引用（circular references）和加速重复嵌套查询。
+  // 默认值为 SESSION，这种情况下会缓存一个会话中执行的所有查询。
+  // 若设置值为 STATEMENT，本地会话仅用在语句执行上，对相同 SqlSession 的不同调用将不会共享数据。
   protected LocalCacheScope localCacheScope = LocalCacheScope.SESSION;
+  // 当没有为参数提供特定的 JDBC 类型时，为空值指定 JDBC 类型。 某些驱动需要指定列的 JDBC 类型，多数情况直接用一般类型即可，比如 NULL、VARCHAR 或 OTHER。
   protected JdbcType jdbcTypeForNull = JdbcType.OTHER;
+  // 指定对象的哪个方法触发一次延迟加载
   protected Set<String> lazyLoadTriggerMethods = new HashSet<>(Arrays.asList("equals", "clone", "hashCode", "toString"));
+  // 设置超时时间，它决定驱动等待数据库响应的秒数。默认不超时
   protected Integer defaultStatementTimeout;
+  // 为驱动的结果集设置默认获取数量。
   protected Integer defaultFetchSize;
+
   protected ResultSetType defaultResultSetType;
+  // SIMPLE 就是普通的执行器；REUSE 执行器会重用预处理语句（prepared statements）； BATCH 执行器将重用语句并执行批量更新。
   protected ExecutorType defaultExecutorType = ExecutorType.SIMPLE;
+  // 指定 MyBatis 应如何自动映射列到字段或属性。
+  // NONE 表示取消自动映射；PARTIAL 只会自动映射没有定义嵌套结果集映射的结果集。 FULL 会自动映射任意复杂的结果集（无论是否嵌套）。
   protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
+  // 指定发现自动映射目标未知列（或者未知属性类型）的行为。这个值应该设置为WARNING比较合适
   protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
-
+  // settings下的properties属性
   protected Properties variables = new Properties();
+  // 默认的反射器工厂,用于操作属性、构造器方便
   protected ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
+  // 对象工厂, 所有的类resultMap类都需要依赖于对象工厂来实例化
   protected ObjectFactory objectFactory = new DefaultObjectFactory();
+  // 对象包装器工厂,主要用来在创建非原生对象,比如增加了某些监控或者特殊属性的代理类
   protected ObjectWrapperFactory objectWrapperFactory = new DefaultObjectWrapperFactory();
-
+  // 延迟加载的全局开关。当开启时，所有关联对象都会延迟加载。特定关联关系中可通过设置fetchType属性来覆盖该项的开关状态。
   protected boolean lazyLoadingEnabled = false;
+
+  // 指定 Mybatis 创建具有延迟加载能力的对象所用到的代理工具。MyBatis 3.3+使用JAVASSIST
   protected ProxyFactory proxyFactory = new JavassistProxyFactory(); // #224 Using internal Javassist instead of OGNL
 
+  // MyBatis 可以根据不同的数据库厂商执行不同的语句，这种多厂商的支持是基于映射语句中的 databaseId 属性。
   protected String databaseId;
   /**
    * Configuration factory class.
    * Used to create Configuration for loading deserialized unread properties.
+   *
+   * 指定一个提供Configuration实例的类. 这个被返回的Configuration实例是用来加载被反序列化对象的懒加载属性值.
+   * 这个类必须包含一个签名方法static Configuration getConfiguration(). (从 3.2.3 版本开始)
    *
    * @see <a href='https://code.google.com/p/mybatis/issues/detail?id=300'>Issue 300 (google code)</a>
    */
   protected Class<?> configurationFactory;
 
   protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
+
+  // mybatis插件列表
   protected final InterceptorChain interceptorChain = new InterceptorChain();
   protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
+  // 类型注册器, 用于在执行sql语句的出入参映射以及mybatis-config文件里的各种配置比如<transactionManager type="JDBC"/>
+  // <dataSource type="POOLED">时使用简写, 后面会详细解释
   protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
   protected final LanguageDriverRegistry languageRegistry = new LanguageDriverRegistry();
 
@@ -179,6 +225,8 @@ public class Configuration {
   }
 
   public Configuration() {
+
+    // 内置别名注册
     typeAliasRegistry.registerAlias("JDBC", JdbcTransactionFactory.class);
     typeAliasRegistry.registerAlias("MANAGED", ManagedTransactionFactory.class);
 
@@ -658,7 +706,10 @@ public class Configuration {
 
   public void addResultMap(ResultMap rm) {
     resultMaps.put(rm.getId(), rm);
+
+    // 检查本resultMap内的鉴别器有没有嵌套resultMap
     checkLocallyForDiscriminatedNestedResultMaps(rm);
+    // 检查所有resultMap的鉴别器有没有嵌套resultMap
     checkGloballyForDiscriminatedNestedResultMaps(rm);
   }
 

@@ -24,6 +24,7 @@ import java.util.Map;
  */
 public enum JdbcType {
   /*
+    添加它是为了对ARRAY数据类型提供基本支持-但仍然需要自定义类型处理程序
    * This is added to enable basic support for the
    * ARRAY data type - but a custom type handler is still required
    */
