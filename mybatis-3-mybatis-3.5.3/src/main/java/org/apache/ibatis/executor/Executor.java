@@ -30,6 +30,11 @@ import org.apache.ibatis.transaction.Transaction;
 /**
  * @author Clinton Begin
  */
+
+//mybatis提供了两种类型的执行器，缓存执行器与非缓存执行器
+// （使用哪个执行器是通过配置文件中settings下的属性defaultExecutorType控制的，默认是SIMPLE），
+// 是否使用缓存执行器则是通过执行cacheEnabled控制的，默认是true。
+//　　缓存执行器不是真正功能上独立的执行器，而是非缓存执行器的装饰器模式。
 public interface Executor {
 
   ResultHandler NO_RESULT_HANDLER = null;

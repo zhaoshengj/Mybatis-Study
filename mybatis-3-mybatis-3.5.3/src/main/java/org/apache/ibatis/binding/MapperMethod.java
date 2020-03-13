@@ -91,7 +91,7 @@ public class MapperMethod {
           }
         }
         break;
-      case FLUSH:
+      case FLUSH: // 主要用于BatchExecutor和CacheExecutor的场景,SimpleExecutor模式不适用
         result = sqlSession.flushStatements();
         break;
       default:

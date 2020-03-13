@@ -34,6 +34,13 @@ import org.apache.ibatis.transaction.managed.ManagedTransactionFactory;
 /**
  * @author Clinton Begin
  */
+
+
+//主要有多种形式的重载，除了使用默认设置外，可以指定自动提交模式、特定的jdbc连接、事务隔离级别，以及指定的执行器类型。
+// 关于执行器类型，mybatis提供了三种执行器类型：SIMPLE, REUSE, BATCH。
+// 后面我们会详细分析每种类型的执行器的差别以及各自的适用场景。
+// 我们以最简单的无参方法切入（按照一般的套路，
+// 如果定义了多个重载的方法或者构造器，内部实现一定是设置作者认为最合适的默认值，然后调用次多参数的方法，直到最后），它的实现是这样的：
 public class DefaultSqlSessionFactory implements SqlSessionFactory {
 
   private final Configuration configuration;
@@ -44,6 +51,7 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
 
   @Override
   public SqlSession openSession() {
+    // 使用默认的执行器类型(默认是SIMPLE)，默认隔离级别，非自动提交 委托给openSessionFromDataSource方法
     return openSessionFromDataSource(configuration.getDefaultExecutorType(), null, false);
   }
 
@@ -91,7 +99,11 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
     Transaction tx = null;
     try {
       final Environment environment = configuration.getEnvironment();
+      // 获取事务管理器, 支持从数据源或者直接获取
       final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
+      // 从数据源创建一个事务, 同样,数据源必须配置, mybatis内置了JNDI、POOLED、UNPOOLED三种类型的数据源,
+      // 其中POOLED对应的实现为org.apache.ibatis.datasource.pooled.PooledDataSource,
+      // 它是mybatis自带实现的一个同步、线程安全的数据库连接池 一般在生产中,我们会使用dbcp或者druid连接池
       tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);
       final Executor executor = configuration.newExecutor(tx, execType);
       return new DefaultSqlSession(configuration, executor, autoCommit);
@@ -126,6 +138,9 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
   }
 
   private TransactionFactory getTransactionFactoryFromEnvironment(Environment environment) {
+    // 如果没有配置environment或者environment的事务管理器为空,则使用受管的事务管理器
+    // 除非什么都没有配置,否则在mybatis-config里面,至少要配置一个environment，此时事务工厂不允许为空
+    // 对于jdbc类型的事务管理器,则返回JdbcTransactionFactory,其内部操作mybatis的JdbcTransaction实现(采用了Facade模式)，后者对jdbc连接操作
     if (environment == null || environment.getTransactionFactory() == null) {
       return new ManagedTransactionFactory();
     }

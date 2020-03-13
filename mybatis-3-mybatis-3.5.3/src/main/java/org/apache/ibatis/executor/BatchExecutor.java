@@ -42,9 +42,16 @@ public class BatchExecutor extends BaseExecutor {
 
   public static final int BATCH_UPDATE_RETURN_VALUE = Integer.MIN_VALUE + 1002;
 
+  // 存储在一个事务中的批量DML的语句列表
   private final List<Statement> statementList = new ArrayList<>();
+
+  // 存放DML语句对应的参数对象,包括自动/手工生成的key
   private final List<BatchResult> batchResultList = new ArrayList<>();
+
+  // 最新提交执行的SQL语句
   private String currentSql;
+
+  // 最新提交执行的语句
   private MappedStatement currentStatement;
 
   public BatchExecutor(Configuration configuration, Transaction transaction) {
@@ -58,6 +65,9 @@ public class BatchExecutor extends BaseExecutor {
     final BoundSql boundSql = handler.getBoundSql();
     final String sql = boundSql.getSql();
     final Statement stmt;
+
+    // 如果最新执行的一条语句和前面一条语句相同,就不创建新的语句了，直接用缓存的语句，只是把参数对象添加到该语句对应的BatchResult中
+    // 否则的话，无论是否在未提交之前，还有pending的语句，都新插入一条语句到list中
     if (sql.equals(currentSql) && ms.equals(currentStatement)) {
       int last = statementList.size() - 1;
       stmt = statementList.get(last);
@@ -74,6 +84,7 @@ public class BatchExecutor extends BaseExecutor {
       statementList.add(stmt);
       batchResultList.add(new BatchResult(ms, sql, parameterObject));
     }
+    // 调用jdbc的addBatch方法
     handler.batch(stmt);
     return BATCH_UPDATE_RETURN_VALUE;
   }

@@ -24,6 +24,7 @@ import org.apache.ibatis.cache.CacheException;
 /**
  * @author Clinton Begin
  */
+//内部采用原始HashMap实现
 public class PerpetualCache implements Cache {
 
   private final String id;

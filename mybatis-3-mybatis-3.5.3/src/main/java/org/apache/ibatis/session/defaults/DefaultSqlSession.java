@@ -95,12 +95,15 @@ public class DefaultSqlSession implements SqlSession {
 
   @Override
   public <K, V> Map<K, V> selectMap(String statement, Object parameter, String mapKey, RowBounds rowBounds) {
+    //和selectList不同，selectMap多了一个参数mapKey，mapKey就是用来指定返回类型中作为key的那个字段名，
+    // 具体的核心逻辑委托给了selectList方法，只是在返回结果后，mapResultHandler进行了二次处理
     final List<? extends V> list = selectList(statement, parameter, rowBounds);
     final DefaultMapResultHandler<K, V> mapResultHandler = new DefaultMapResultHandler<>(mapKey,
             configuration.getObjectFactory(), configuration.getObjectWrapperFactory(), configuration.getReflectorFactory());
     final DefaultResultContext<V> context = new DefaultResultContext<>();
     for (V o : list) {
       context.nextResultObject(o);
+      //把List转换为Map<object.prop1,object>格式
       mapResultHandler.handleResult(context);
     }
     return mapResultHandler.getMappedResults();
@@ -192,6 +195,8 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public int update(String statement, Object parameter) {
     try {
+      //首先设置了字段dirty=true(dirty主要用在非自动提交模式下，用于判断是否需要提交或回滚，
+      // 在强行提交模式下，如果dirty=true，则需要提交或者回滚，代表可能有pending的事务)，然后调用执行器实例的update()方法
       dirty = true;
       MappedStatement ms = configuration.getMappedStatement(statement);
       return executor.update(ms, wrapCollection(parameter));
@@ -220,6 +225,10 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public void commit(boolean force) {
     try {
+      //对于不同的执行器，在提交和回滚执行的逻辑不一样，因为每个执行器在一级、二级、语句缓存上的差异：
+      //对于简单执行器，除了清空一级缓存外，什么都不做；
+      //对于REUSE执行器，关闭每个缓存的Statement以释放服务器端语句处理器，然后清空缓存的语句；
+      //对于批量处理器，则执行每个批处理语句的executeBatch()方法以便真正执行语句，然后关闭Statement；
       executor.commit(isCommitOrRollbackRequired(force));
       dirty = false;
     } catch (Exception e) {
@@ -312,6 +321,8 @@ public class DefaultSqlSession implements SqlSession {
     cursorList.add(cursor);
   }
 
+
+  //判断是否应该提交或者回滚事务
   private boolean isCommitOrRollbackRequired(boolean force) {
     return (!autoCommit && dirty) || force;
   }

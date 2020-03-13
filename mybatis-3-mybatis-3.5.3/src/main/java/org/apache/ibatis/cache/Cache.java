@@ -38,7 +38,7 @@ import java.util.concurrent.locks.ReadWriteLock;
  *
  * @author Clinton Begin
  */
-
+// 只要实现org.apache.ibatis.cache.Cache接口的任何类都可以当做缓存
 public interface Cache {
 
   /**

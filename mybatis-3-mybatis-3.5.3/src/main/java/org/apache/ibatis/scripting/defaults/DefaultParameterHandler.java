@@ -65,9 +65,12 @@ public class DefaultParameterHandler implements ParameterHandler {
     if (parameterMappings != null) {
       for (int i = 0; i < parameterMappings.size(); i++) {
         ParameterMapping parameterMapping = parameterMappings.get(i);
+        // 仅处理非出参
         if (parameterMapping.getMode() != ParameterMode.OUT) {
           Object value;
           String propertyName = parameterMapping.getProperty();
+          // 计算参数值的优先级是 先判断是不是属于语句的AdditionalParameter；其次参数是不是null；
+          // 然后判断是不是属于注册类型；都不是，那估计参数一定是object或者map了,这就要借助于MetaObject获取属性值了；
           if (boundSql.hasAdditionalParameter(propertyName)) { // issue #448 ask first for additional params
             value = boundSql.getAdditionalParameter(propertyName);
           } else if (parameterObject == null) {
@@ -84,6 +87,8 @@ public class DefaultParameterHandler implements ParameterHandler {
             jdbcType = configuration.getJdbcTypeForNull();
           }
           try {
+            // jdbc下标从1开始，由具体的类型处理器进行参数的设置, 对于每个jdbcType, mybatis都提供了一个对应的Handler
+            // ,具体可参考上文TypeHandler详解, 其内部调用的是PrepareStatement.setXXX进行设置。
             typeHandler.setParameter(ps, i + 1, value, jdbcType);
           } catch (TypeException | SQLException e) {
             throw new TypeException("Could not set parameters for mapping: " + parameterMapping + ". Cause: " + e, e);
