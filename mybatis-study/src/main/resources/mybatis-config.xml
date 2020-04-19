@@ -4,26 +4,65 @@
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
 
 <configuration>
+    <properties resource="mysql.properties">
+        <property name="org.apache.ibatis.parsing.PropertyParser.default-value-separator" value="?:"/> <!-- 修改默认值的分隔符 -->
+        <property name="org.apache.ibatis.parsing.PropertyParser.enable-default-value" value="true"/> <!-- 启用默认值特性 -->
+    </properties>
+    <settings>
+        <!--全局性地开启或关闭所有映射器配置文件中已配置的任何缓存。-->
+        <setting name="cacheEnabled" value="true"/>
+        <setting name="lazyLoadingEnabled" value="true"/>
+        <setting name="multipleResultSetsEnabled" value="true"/>
+        <setting name="useColumnLabel" value="true"/>
+        <setting name="useGeneratedKeys" value="false"/>
+        <setting name="autoMappingBehavior" value="PARTIAL"/>
+        <setting name="autoMappingUnknownColumnBehavior" value="WARNING"/>
+        <!--配置默认的执行器。SIMPLE 就是普通的执行器；REUSE 执行器会重用预处理语句（PreparedStatement）； BATCH 执行器不仅重用语句还会执行批量更新。-->
+        <setting name="defaultExecutorType" value="SIMPLE"/>
+        <!--设置超时时间，它决定数据库驱动等待数据库响应的秒数。-->
+        <setting name="defaultStatementTimeout" value="25"/>
+        <setting name="defaultFetchSize" value="100"/>
+        <setting name="safeRowBoundsEnabled" value="false"/>
+        <!--是否开启驼峰命名自动映射，即从经典数据库列名 A_COLUMN 映射到经典 Java 属性名 aColumn-->
+        <setting name="mapUnderscoreToCamelCase" value="false"/>
+        <setting name="localCacheScope" value="SESSION"/>
+        <setting name="jdbcTypeForNull" value="OTHER"/>
+        <setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString"/>
+    </settings>
 
     <typeAliases>
         <package name="com.mybatis.study.model"/>
     </typeAliases>
+
+    <typeHandlers>
+        <typeHandler handler="com.mybatis.study.config.ExampleTypeHandler"/>
+    </typeHandlers>
+
+    <objectFactory type="com.mybatis.study.config.ExampleObjectFactory">
+        <property name="someProperty" value="100"/>
+    </objectFactory>
+
+    <plugins>
+        <plugin interceptor="com.mybatis.study.piugins.ExamplePlugin">
+            <property name="someProperty" value="100"/>
+        </plugin>
+    </plugins>
 
     <environments default="development">
         <environment id="development">
             <transactionManager type="JDBC" />
             <dataSource type="POOLED">
                 <property name="driver" value="com.mysql.jdbc.Driver" />
-                <property name="url" value="jdbc:mysql://120.79.4.13:3306/wms_test?useSSL=false" />
-                <property name="username" value="root" />
-                <property name="password" value="admin123"/>
+                <property name="url" value="${url}" />
+                <property name="username" value="${username?:root}" />
+                <property name="password" value="${password}"/>
             </dataSource>
         </environment>
     </environments>
     <mappers>
-        <!--<package name="com/mybatis/study/mapper"></package>-->
+        <!--<package name="com.mybatis.study.mapper"></package>-->
        <mapper resource="com/mybatis/study/mapper/UserMapper.xml"/>
        <!-- <mapper url=""></mapper>-->
-       <!-- <mapper class=""></mapper>-->
+        <!--<mapper class="com.mybatis.study.mapper.UserMapper.xml"/>-->
     </mappers>
 </configuration>

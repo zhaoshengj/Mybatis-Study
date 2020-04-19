@@ -1,7 +1,10 @@
 package com.mybatis.study.model;
 
+import org.apache.ibatis.type.Alias;
+
 import java.io.Serializable;
 
+@Alias("user")
 public class User implements Serializable {
 
     private int id;

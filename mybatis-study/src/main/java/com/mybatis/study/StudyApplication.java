@@ -3,13 +3,12 @@ package com.mybatis.study;
 import com.mybatis.study.dao.UserDao;
 import com.mybatis.study.model.User;
 import org.apache.ibatis.io.Resources;
-import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.session.*;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 @SpringBootApplication
 public class StudyApplication {
@@ -32,7 +31,8 @@ public class StudyApplication {
         }
         //构建sqlSession的工厂
         SqlSessionFactory sessionFactory = new SqlSessionFactoryBuilder().build(is);
-        SqlSession session = sessionFactory.openSession();
+
+        SqlSession session = sessionFactory.openSession(ExecutorType.SIMPLE);
         String statement = "com.mybatis.study.dao.UserDao.findUserById";
 
 
@@ -42,7 +42,8 @@ public class StudyApplication {
         //语句处理器StatementHandler，语句处理器负责和JDBC层具体交互，包括prepare语句，执行语句，以及调用ParameterHandler.parameterize()设置参数。
         //结果集处理器ResultSetHandler，结果处理器负责将JDBC查询结果映射到java对象。
         UserDao mapper = session.getMapper(UserDao.class);
-        User user = mapper.findUserById(2);
+        User user = mapper.findUserById(1);
+        System.out.println(user.toString());
         session.commit();
 
 
@@ -61,10 +62,13 @@ public class StudyApplication {
         // 二级缓存默认不启用，需要通过在Mapper中明确设置cache，它的实现在CachingExecutor的query()方法中
 
         //在缓存的设计上，Mybatis的所有Cache算法都是基于装饰器/Composite模式对PerpetualCache扩展增加功能。
-        user = session.selectOne(statement,2);
+        user = session.selectOne(statement,1);
 
-        System.out.println(user);
+        System.out.println(user.toString());
 
+        String list = "com.mybatis.study.dao.UserDao.findAll";
+        List<Object> objects = session.selectList(list);
+        objects.forEach(o -> System.out.println(o.toString()));
     }
 
 }

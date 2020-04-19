@@ -15,25 +15,25 @@ public class JdbcHelloWord {
         try {
             Connection con = null; //定义一个MYSQL链接对象
             Class.forName("com.mysql.jdbc.Driver").newInstance(); //MYSQL驱动
-            con = DriverManager.getConnection("jdbc:mysql://120.79.4.13:3306/wms_test?useSSL=false&useUnicode=true", "root", "admin123"); //链接本地MYSQL
+            con = DriverManager.getConnection("jdbc:mysql://120.79.4.13:3306/zsj?useSSL=false&useUnicode=true", "root", "admin123"); //链接本地MYSQL
 
             //更新一条数据
-            String updateSql = "UPDATE LfParty SET remark1 = 'mybatis internal example' WHERE lfPartyId = ?";
+            String updateSql = "UPDATE user SET userName = 'mybatis' WHERE id = ?";
             PreparedStatement pstmt = con.prepareStatement(updateSql);
             pstmt.setString(1, "1");
             long updateRes = pstmt.executeUpdate();
             System.out.print("UPDATE:" + updateRes);
 
             //查询数据并输出
-            String sql = "select lfPartyId,partyName from LfParty where lfPartyId = ?";
+            String sql = "select id,userName from user where id = ?";
             PreparedStatement pstmt2 = con.prepareStatement(sql);
             pstmt2.setString(1, "1");
             ResultSet rs = pstmt2.executeQuery();
             while (rs.next()) { //循环输出结果集
-                String lfPartyId = rs.getString("lfPartyId");
-                String partyName = rs.getString("partyName");
+                String id = rs.getString("id");
+                String userName = rs.getString("userName");
                 System.out.print("\r\n\r\n");
-                System.out.print("lfPartyId:" + lfPartyId + "partyName:" + partyName);
+                System.out.print("Id:" + id + "userName:" + userName);
             }
 
         } catch (Exception e) {
