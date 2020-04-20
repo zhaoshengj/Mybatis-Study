@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="6579293c-a5da-4467-b9b0-eece9db86adc" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mybatis-3-mybatis-3.5.3/src/main/java/org/apache/ibatis/builder/xml/XMLConfigBuilder.java" beforeDir="false" afterPath="$PROJECT_DIR$/mybatis-3-mybatis-3.5.3/src/main/java/org/apache/ibatis/builder/xml/XMLConfigBuilder.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/mybatis-3-mybatis-3.5.3/target/" />
     <ignored path="$PROJECT_DIR$/mybatis-study/target/" />
@@ -18,11 +17,12 @@
     <session id="-1198990272">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="8" />
+          <entry key="project.closed" value="9" />
           <entry key="project.open.time.1" value="7" />
+          <entry key="project.open.time.10" value="1" />
           <entry key="project.open.time.2" value="1" />
           <entry key="project.open.time.47" value="1" />
-          <entry key="project.opened" value="9" />
+          <entry key="project.opened" value="10" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -75,7 +75,7 @@
     </session>
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -199,10 +199,11 @@
       <select />
     </treeState>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="y" value="23" />
-    <option name="width" value="1280" />
-    <option name="height" value="722" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="-59" />
+    <option name="y" value="-877" />
+    <option name="width" value="1440" />
+    <option name="height" value="822" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -221,8 +222,8 @@
           <select />
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
       <pane id="Scope" />
+      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -344,7 +345,8 @@
       <workItem from="1584090047071" duration="112000" />
       <workItem from="1584612974808" duration="222000" />
       <workItem from="1587087857404" duration="15926000" />
-      <workItem from="1587194071212" duration="2229000" />
+      <workItem from="1587194071212" duration="2465000" />
+      <workItem from="1587346439807" duration="95000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <created>1578275726621</created>
@@ -381,16 +383,23 @@
       <option name="project" value="LOCAL" />
       <updated>1587290934378</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="mybatis 部分源码阅读并且加入注释">
+      <created>1587305238656</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1587305238656</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="50472000" />
+    <option name="totallyTimeSpent" value="50803000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1280" height="722" extended-state="6" />
+    <frame x="-59" y="-877" width="1440" height="822" extended-state="0" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.2968254" visible="true" weight="0.25686592" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.2968254" visible="true" weight="0.23032904" />
       <window_info id="Structure" order="1" sideWeight="0.7031746" side_tool="true" weight="0.15912762" />
       <window_info id="Designer" order="2" />
       <window_info id="UI Designer" order="3" />
@@ -403,10 +412,10 @@
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Version Control" order="7" weight="0.32738853" />
+      <window_info active="true" anchor="bottom" id="Version Control" order="7" visible="true" weight="0.3260274" />
       <window_info anchor="bottom" id="Database Changes" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Terminal" order="9" sideWeight="0.4983845" weight="0.32857144" />
-      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5016155" side_tool="true" visible="true" weight="0.2809524" />
+      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5016155" side_tool="true" weight="0.28082192" />
       <window_info anchor="bottom" id="Spring" order="11" />
       <window_info anchor="bottom" id="Messages" order="12" weight="0.32876712" />
       <window_info anchor="bottom" id="Java Enterprise" order="13" />
@@ -670,10 +679,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="199">
           <caret line="106" column="36" selection-start-line="106" selection-start-column="36" selection-end-line="106" selection-end-column="36" />
-          <folding>
-            <element signature="e#1836#1837#0" expanded="true" />
-            <element signature="e#1880#1881#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -772,9 +777,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="399">
           <caret line="24" column="5" lean-forward="true" selection-start-line="24" selection-start-column="5" selection-end-line="24" selection-end-column="5" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -782,11 +784,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="323">
           <caret line="19" lean-forward="true" selection-start-line="19" selection-end-line="19" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#288#289#0" expanded="true" />
-            <element signature="e#329#330#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -794,9 +791,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="170">
           <caret line="12" lean-forward="true" selection-start-line="12" selection-end-line="12" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -811,10 +805,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="10200">
           <caret line="694" column="16" selection-start-line="694" selection-start-column="16" selection-end-line="694" selection-end-column="16" />
-          <folding>
-            <element signature="e#24380#24381#0" expanded="true" />
-            <element signature="e#24405#24406#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -867,11 +857,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="146">
           <caret line="809" column="7" selection-start-line="809" selection-start-column="7" selection-end-line="809" selection-end-column="7" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#17412#17413#0" expanded="true" />
-            <element signature="e#17448#17449#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
